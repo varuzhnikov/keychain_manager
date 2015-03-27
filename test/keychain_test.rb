@@ -17,22 +17,13 @@ class KeychainManagerTest < Test::Unit::TestCase
 
   def test_create_delete_exists
     kcm = KeychainManager.new("some_keychain")
-    assert !kcm.exists?
+    assert !kcm.exists?, "keychain already exists"
     kcm.create
-    assert kcm.exists?
+    assert kcm.exists?, "keychain should be created"
     kcm.delete
-    assert !kcm.exists?
+    assert !kcm.exists?, "keychain should be deleted"
   end
 
-  def test_file
-    kcm = KeychainManager.new("some_keychain")
-    assert !kcm.exists?
-    assert_nil kcm.file
-    kcm.create
-    assert_not_nil kcm.file
-    kcm.delete
-    assert !kcm.exists?
-  end
 
   def test_generate_rsa_key
     rsa_tmp = '/tmp/test.rsa'
@@ -49,6 +40,9 @@ class KeychainManagerTest < Test::Unit::TestCase
     cert_tmp = '/tmp/test.cert'
     File.delete(cert_tmp) if File.exists?(cert_tmp)
     KeychainManager.generate_cert_request('partners@reflect7.com', 'US', rsa_tmp, cert_tmp)
+
+    csr_plain_text = `openssl req -in /tmp/test.cert -noout -text`
+    assert csr_plain_text.include?("Subject: emailAddress=partners@reflect7.com, CN=partners@reflect7.com, C=US")
     assert File.exists?(cert_tmp)
   end
 
